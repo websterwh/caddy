@@ -1,0 +1,74 @@
+name: Build and Push
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore:
+      - 'README.md'
+  schedule:
+    # Every Monday 06:00 UTC — rebuilds against latest caddy:2-builder
+    # even if nothing in this repo changed, to pick up upstream patches.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      extra_plugin:
+        description: 'Optional one-off plugin module path to test (not saved to plugins.txt)'
+        required: false
+        default: ''
+
+env:
+  IMAGE_NAME: caddy
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.event.inputs.extra_plugin == '' }}
+            type=raw,value=test-{{sha}},enable=${{ github.event.inputs.extra_plugin != '' }}
+            type=semver,pattern={{version}}
+            type=sha,prefix=
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            EXTRA_PLUGIN=${{ github.event.inputs.extra_plugin }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

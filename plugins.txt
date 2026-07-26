@@ -1,0 +1,7 @@
+# One Caddy plugin (Go module path) per line.
+# Blank lines and lines starting with # are ignored.
+# To add a new addon: add its module path below, commit, push.
+# Find more plugins at https://caddyserver.com/download
+
+github.com/hslatman/caddy-crowdsec-bouncer
+github.com/WeidiDeng/caddy-cloudflare-ip
