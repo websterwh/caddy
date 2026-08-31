@@ -2,3 +2,4 @@
 
 github.com/hslatman/caddy-crowdsec-bouncer
 github.com/WeidiDeng/caddy-cloudflare-ip
+github.com/greenpau/caddy-security
