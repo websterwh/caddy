@@ -4,4 +4,4 @@ github.com/hslatman/caddy-crowdsec-bouncer
 github.com/WeidiDeng/caddy-cloudflare-ip
 github.com/greenpau/caddy-security
 github.com/caddy-dns/cloudflare
-github.com/lucaslorentz/caddy-docker-proxy
+lucaslorentz/caddy-docker-proxy/v2
