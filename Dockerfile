@@ -7,7 +7,10 @@ ARG EXTRA_PLUGIN=""
 COPY plugins.txt /plugins.txt
 
 RUN set -eux; \
-    PLUGIN_ARGS=$(grep -v '^#' /plugins.txt | grep -v '^[[:space:]]*$' | sed 's/^/--with /' | tr '\n' ' '); \
+    PLUGIN_ARGS=$(awk '\
+        { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0) } \
+        /^[[:space:]]*#/ || /^$/ { next } \
+        { if ($0 !~ /^[^\/]+\.[^\/]+\//) $0="github.com/" $0; printf "--with %s ", $0 }' /plugins.txt); \
     if [ -n "$EXTRA_PLUGIN" ]; then \
         PLUGIN_ARGS="$PLUGIN_ARGS --with $EXTRA_PLUGIN"; \
     fi; \
@@ -17,3 +20,5 @@ RUN set -eux; \
 FROM caddy:2
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+
+CMD ["docker-proxy"]
